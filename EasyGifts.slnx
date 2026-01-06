@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="EasyGiftsBackend.Api/EasyGiftsBackend.Api.csproj" />
+  <Project Path="EasyGiftsBackend.Application/EasyGiftsBackend.Application.csproj" />
+  <Project Path="EasyGiftsBackend.Domain/EasyGiftsBackend.Domain.csproj" />
+  <Project Path="EasyGiftsBackend.Infrastructure/EasyGiftsBackend.Infrastructure.csproj" />
+</Solution>
