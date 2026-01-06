@@ -1,12 +1,21 @@
-var builder = WebApplication.CreateBuilder(args);
+using Microsoft.AspNetCore.Builder;
+using EasyGiftsBackend.Infrastructure.Data;
+using Microsoft.EntityFrameworkCore;
 
-// Add services to the container.
+var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 
-var app = builder.Build();
+builder.Services.AddDbContext<AppDbContext>(options =>
+    {
+        options.UseNpgsql(builder.Configuration.GetConnectionString("MyPostgreDB"));
+    });
 
-// Configure the HTTP request pipeline.
+builder.Services.AddAuthentication();
+builder.Services.AddAuthorization();
+
+
+var app = builder.Build();
 
 app.UseHttpsRedirection();
 
