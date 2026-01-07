@@ -1,6 +1,11 @@
 ﻿using EasyGiftsBackend.Application.Interfaces;
 using EasyGiftsBackend.Domain.DTOs;
+using EasyGiftsBackend.Domain.Entities;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
+
 
 namespace EasyGiftsBackend.Api.Controllers
 {
@@ -29,22 +34,21 @@ namespace EasyGiftsBackend.Api.Controllers
         }
 
         [HttpPost("login")]
-        public async Task<ActionResult> Login(LoginDto loginDto)
+        public async Task<IActionResult> LoginJwt(LoginDto dto)
         {
-            try
-            {
-                var user = await _authService.Login(loginDto);
-                return Ok(new
-                {
-                    success = true,
-                    message = "login successful",
-                    user
-                });
-            }
-            catch (Exception ex)
-            {
-                return Unauthorized(new { success = false, message = ex.Message });
-            }
+            var result = await _authService.Login(dto);
+            return Ok(result);
         }
-    }
+
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        [HttpGet("me")]
+        public IActionResult Me()
+        {
+            return Ok(new
+            {
+                Id = User.FindFirstValue(ClaimTypes.NameIdentifier),
+                Email = User.FindFirstValue(ClaimTypes.Email)
+            });
+        }
+    }   
 }

@@ -9,6 +9,7 @@ namespace EasyGiftsBackend.Application.Interfaces
     public interface IAuthService
     {
         public Task<User> Register(RegisterDto registerDto);  
-        public Task<LoginResponseDto> Login(LoginDto loginDto);
+        Task<LoginResponseDto> Login(LoginDto loginDto);
+
     }
 }
