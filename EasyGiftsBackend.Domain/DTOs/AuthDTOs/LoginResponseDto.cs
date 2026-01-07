@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace EasyGiftsBackend.Domain.DTOs
+namespace EasyGiftsBackend.Domain.DTOs.AuthDTOs
 {
     public class LoginResponseDto
     {

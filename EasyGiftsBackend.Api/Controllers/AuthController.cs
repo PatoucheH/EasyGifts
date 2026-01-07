@@ -1,5 +1,5 @@
 ﻿using EasyGiftsBackend.Application.Interfaces;
-using EasyGiftsBackend.Domain.DTOs;
+using EasyGiftsBackend.Domain.DTOs.AuthDTOs;
 using EasyGiftsBackend.Domain.Entities;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;

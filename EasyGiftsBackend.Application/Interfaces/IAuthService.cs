@@ -1,4 +1,4 @@
-﻿using EasyGiftsBackend.Domain.DTOs;
+﻿using EasyGiftsBackend.Domain.DTOs.AuthDTOs;
 using EasyGiftsBackend.Domain.Entities;
 using System;
 using System.Collections.Generic;

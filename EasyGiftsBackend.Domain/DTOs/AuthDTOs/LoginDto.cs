@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace EasyGiftsBackend.Domain.DTOs
+namespace EasyGiftsBackend.Domain.DTOs.AuthDTOs
 {
-    public class RegisterDto
+    public class LoginDto
     {
         public required string Email { get; set; }
         public required string Password { get; set; }

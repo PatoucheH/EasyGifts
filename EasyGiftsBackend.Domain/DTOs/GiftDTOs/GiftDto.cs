@@ -1,10 +1,11 @@
-﻿using System;
+﻿using EasyGiftsBackend.Domain.Entities;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace EasyGiftsBackend.Domain.Entities
+namespace EasyGiftsBackend.Domain.DTOs.GiftDTOs
 {
-    public class Gift
+    public class GiftDto
     {
         public Guid Id { get; set; }
         public required string Name { get; set; }
@@ -14,6 +15,5 @@ namespace EasyGiftsBackend.Domain.Entities
         public string? ImageUrl { get; set; }
         public bool IsPurchased { get; set; } = true;
         public Guid UserId { get; set; }
-        public User? User { get; set; }
     }
 }

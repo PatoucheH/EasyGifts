@@ -1,10 +1,10 @@
-using Microsoft.AspNetCore.Builder;
-using EasyGiftsBackend.Infrastructure.Data;
 using EasyGiftsBackend.Application.Interfaces;
+using EasyGiftsBackend.Infrastructure.Data;
 using EasyGiftsBackend.Infrastructure.Services;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 
@@ -13,8 +13,8 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IGiftsService, GiftsService>();
 builder.Services.AddIdentity<IdentityUser, IdentityRole>()
     .AddEntityFrameworkStores<AppDbContext>()
     .AddDefaultTokenProviders();
@@ -45,12 +45,6 @@ builder.Services.AddAuthorization();
 
 
 var app = builder.Build();
-
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
 
 app.UseHttpsRedirection();
 app.UseAuthentication();
