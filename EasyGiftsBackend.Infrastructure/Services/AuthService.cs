@@ -4,6 +4,7 @@ using EasyGiftsBackend.Domain.Entities;
 using EasyGiftsBackend.Infrastructure.Data;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using System;
@@ -29,6 +30,33 @@ namespace EasyGiftsBackend.Infrastructure.Services
             _configuration = configuration;
 
         }
+
+        private async Task HandleGroupInvitationIfExists(RegisterDto registerDto, User user)
+        {
+            if (string.IsNullOrWhiteSpace(registerDto.InvitationToken))
+                return;
+
+            var invitation = await _context.GroupInvitations
+                .FirstOrDefaultAsync(i =>
+                    i.Token == registerDto.InvitationToken &&
+                    i.Email == user.Email &&
+                    !i.Accepted &&
+                    i.ExpiresAt > DateTime.UtcNow);
+
+            if (invitation == null)
+                return;
+
+            _context.GroupUsers.Add(new GroupUser
+            {
+                GroupId = invitation.GroupId,
+                UserId = user.Id
+            });
+
+            invitation.Accepted = true;
+
+            await _context.SaveChangesAsync();
+        }
+
         public async Task<User> Register(RegisterDto registerDto)
         {
             var identityUser = new IdentityUser
@@ -53,6 +81,7 @@ namespace EasyGiftsBackend.Infrastructure.Services
             };
 
             _context.AppUsers.Add(user);
+            await HandleGroupInvitationIfExists(registerDto, user);
             await _context.SaveChangesAsync();
             return user;
 
