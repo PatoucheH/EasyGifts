@@ -7,8 +7,8 @@ namespace EasyGiftsBackend.Domain.Entities
     public class GroupUser
     {
         public Guid GroupId { get; set; }
-        public required Group Group { get; set; }
+        public Group Group { get; set; } = null!;
         public Guid UserId { get; set; }
-        public required User User { get; set; }
+        public User User { get; set; } = null!;
     }
 }

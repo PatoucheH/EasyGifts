@@ -13,7 +13,7 @@ namespace EasyGiftsBackend.Infrastructure.Services
 {
     public class GiftsService : IGiftsService
     {
-        public AppDbContext _context;
+        private AppDbContext _context;
         private readonly IHttpContextAccessor _httpContextAccessor;
 
         public GiftsService(AppDbContext context, IHttpContextAccessor httpContextAccessor)

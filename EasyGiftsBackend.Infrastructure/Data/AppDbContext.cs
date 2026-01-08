@@ -15,6 +15,7 @@ namespace EasyGiftsBackend.Infrastructure.Data
         public DbSet<Gift> Gifts { get; set; }
         public DbSet<Group> Groups { get; set; }
         public DbSet<GroupUser> GroupUsers { get; set; }
+        public DbSet<GroupInvitation> GroupInvitations { get; set; }
         public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) {}
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -35,10 +36,15 @@ namespace EasyGiftsBackend.Infrastructure.Data
                 .HasForeignKey(gu => gu.UserId);
 
             modelBuilder.Entity<Group>()
-            .HasOne(g => g.Admin)
-            .WithMany()
-            .HasForeignKey(g => g.AdminId)
-            .OnDelete(DeleteBehavior.Restrict);
+                .HasOne(g => g.Admin)
+                .WithMany()
+                .HasForeignKey(g => g.AdminId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<GroupInvitation>()
+                .HasIndex(i => i.Token)
+                .IsUnique();
+
 
         }
     }
