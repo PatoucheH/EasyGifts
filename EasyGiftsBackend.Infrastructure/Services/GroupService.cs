@@ -1,5 +1,6 @@
 ﻿using EasyGiftsBackend.Application.Interfaces;
 using EasyGiftsBackend.Domain.DTOs.GroupDTOs;
+using EasyGiftsBackend.Domain.DTOs.UserDTOs;
 using EasyGiftsBackend.Domain.Entities;
 using EasyGiftsBackend.Infrastructure.Data;
 using Microsoft.AspNetCore.Http;
@@ -53,6 +54,17 @@ namespace EasyGiftsBackend.Infrastructure.Services
             return appUser.Id;
         }
 
+        private static UserDto ToUserDto(User user)
+        {
+            return new UserDto
+            {
+                Id = user.Id,
+                Username = user.Username,
+                Email = user.Email
+            };
+        }
+
+
         public async Task<GroupDto> CreateGroup(string groupName)
         {
             if(string.IsNullOrWhiteSpace(groupName))
@@ -80,7 +92,7 @@ namespace EasyGiftsBackend.Infrastructure.Services
             return new GroupDto
             {
                 Name = group.Name,
-                Admin = user,
+                Admin = ToUserDto(user),
             };
 
         }
@@ -111,7 +123,6 @@ namespace EasyGiftsBackend.Infrastructure.Services
             var user = await _context.AppUsers
                 .FirstOrDefaultAsync(u => u.Email == email);
 
-            // CAS USER EXISTE
             if (user != null)
             {
                 var alreadyInGroup = await _context.GroupUsers
@@ -140,7 +151,6 @@ namespace EasyGiftsBackend.Infrastructure.Services
                 return "User added and notified";
             }
 
-            // CAS USER N’EXISTE PAS
             var token = Guid.NewGuid().ToString("N");
 
             var invitation = new GroupInvitation
@@ -196,5 +206,64 @@ namespace EasyGiftsBackend.Infrastructure.Services
             return "User removed from group successfully";
         }
 
+        public async Task<GroupDto> GetGroupById(Guid groupId)
+        {
+            var group = await _context.Groups
+                .Include(g => g.Admin)
+                .Include(g => g.GroupUsers)
+                    .ThenInclude(gu => gu.User)
+                .FirstOrDefaultAsync(g => g.Id == groupId)
+                ?? throw new Exception("Group not found");
+            return new GroupDto
+            {
+                Name = group.Name,
+                Admin = ToUserDto(group.Admin)
+            };
+        }
+
+        public async Task<GroupDto> GetGroupCurrentUser()
+        {
+            var currentUserId = GetCurrentUserId();
+
+            var groupUser = await _context.GroupUsers
+                .Include(gu => gu.Group)
+                    .ThenInclude(g => g.Admin)
+                .FirstOrDefaultAsync(gu => gu.UserId == currentUserId)
+                ?? throw new Exception("User is not in any group");
+
+            return new GroupDto
+            {
+                Name = groupUser.Group.Name,
+                Admin = ToUserDto(groupUser.Group.Admin)
+            };
+        }
+
+
+        public async Task<List<UserDto>> GetMembersOfGroup(Guid groupId)
+        {
+            var currentUserId = GetCurrentUserId();
+
+            var group = await _context.Groups
+                .Include(g => g.GroupUsers)
+                .FirstOrDefaultAsync(g => g.Id == groupId)
+                ?? throw new Exception("Group not found");
+
+            var isAdmin = group.AdminId == currentUserId;
+
+            var isMember = group.GroupUsers
+                .Any(gu => gu.UserId == currentUserId);
+
+            if (!isAdmin && !isMember)
+                throw new UnauthorizedAccessException(
+                    "You are not allowed to view members of this group");
+
+            var members = await _context.GroupUsers
+                .Where(gu => gu.GroupId == groupId)
+                .Include(gu => gu.User)
+                .Select(gu => ToUserDto(gu.User))
+                .ToListAsync();
+
+            return members;
+        }
     }
 }

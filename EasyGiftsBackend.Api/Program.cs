@@ -23,16 +23,13 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("MyPostgreDB"));
 });
 
-// ===== IDENTITY (pour la gestion des users uniquement) =====
 builder.Services.AddIdentity<IdentityUser, IdentityRole>(options =>
 {
-    // Désactiver la redirection automatique
     options.SignIn.RequireConfirmedAccount = false;
 })
 .AddEntityFrameworkStores<AppDbContext>()
 .AddDefaultTokenProviders();
 
-// ⚠️ CRITIQUE : Empêcher Identity d'utiliser des cookies
 builder.Services.ConfigureApplicationCookie(options =>
 {
     options.Events.OnRedirectToLogin = context =>
@@ -47,10 +44,8 @@ builder.Services.ConfigureApplicationCookie(options =>
     };
 });
 
-// ===== JWT AUTHENTICATION =====
 builder.Services.AddAuthentication(options =>
 {
-    // ⚠️ Forcer JWT comme schéma par défaut (pas Identity)
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
     options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
     options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;

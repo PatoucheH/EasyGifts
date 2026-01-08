@@ -2,7 +2,6 @@
 using EasyGiftsBackend.Domain.DTOs.GroupDTOs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
 
 namespace EasyGiftsBackend.Api.Controllers
 {
@@ -19,14 +18,14 @@ namespace EasyGiftsBackend.Api.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> CreateGroup(CreateGroupRequest groupName)
+        public async Task<IActionResult> CreateGroup(CreateGroupRequest request)
         {
-            if (string.IsNullOrWhiteSpace(groupName.GroupName))
+            if (string.IsNullOrWhiteSpace(request.GroupName))
                 return BadRequest("Group name is required");
 
             try
             {
-                var group = await _groupService.CreateGroup(groupName.GroupName);
+                var group = await _groupService.CreateGroup(request.GroupName);
                 return Ok(group);
             }
             catch (Exception ex)
@@ -62,6 +61,66 @@ namespace EasyGiftsBackend.Api.Controllers
             try
             {
                 var result = await _groupService.DeleteGroup(groupId);
+                return Ok(result);
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return Forbid(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [HttpGet("{groupId}")]
+        public async Task<IActionResult> GetGroupById(Guid groupId)
+        {
+            try
+            {
+                var group = await _groupService.GetGroupById(groupId);
+                return Ok(group);
+            }
+            catch (Exception ex)
+            {
+                return NotFound(ex.Message);
+            }
+        }
+
+        [HttpGet("me")]
+        public async Task<IActionResult> GetMyGroup()
+        {
+            try
+            {
+                var group = await _groupService.GetGroupCurrentUser();
+                return Ok(group);
+            }
+            catch (Exception ex)
+            {
+                return NotFound(ex.Message);
+            }
+        }
+
+        [HttpGet("{groupId}/members")]
+        public async Task<IActionResult> GetGroupMembers(Guid groupId)
+        {
+            try
+            {
+                var members = await _groupService.GetMembersOfGroup(groupId);
+                return Ok(members);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [HttpDelete("{groupId}/members/{userId}")]
+        public async Task<IActionResult> RemoveUserFromGroup(Guid groupId, Guid userId)
+        {
+            try
+            {
+                var result = await _groupService.RemoveUserFromGroup(groupId, userId);
                 return Ok(result);
             }
             catch (UnauthorizedAccessException ex)
