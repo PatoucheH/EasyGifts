@@ -1,4 +1,4 @@
-version: '3.9'
+version: "3.9"
 
 services:
   postgres:
@@ -16,15 +16,25 @@ services:
 
   api:
     build:
-      context: .
-      dockerfile: EasyGiftsBackend.Api/Dockerfile
+      context: ./backend
+      dockerfile: Dockerfile
     container_name: easygifts-api
     depends_on:
       - postgres
     environment:
-      ConnectionStrings__DefaultConnection: "Host=postgres;Port=5432;Database=EasyGiftsDb;Username=postgres;Password=postgres"
+      ConnectionStrings__MyPostgreDB: "Host=postgres;Port=5432;Database=EasyGiftsDb;Username=postgres;Password=postgres"
     ports:
       - "5000:5000"
+
+  frontend:
+    build:
+      context: ./frontend/easygifts-front
+      dockerfile: Dockerfile
+    container_name: easygifts-frontend
+    depends_on:
+      - api
+    ports:
+      - "4200:80"
 
 volumes:
   pgdata:
