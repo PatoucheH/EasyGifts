@@ -11,4 +11,3 @@ namespace EasyGiftsBackend.Domain.DTOs.AuthDTOs
         public string? InvitationToken { get; set; }
     }
 }
-}

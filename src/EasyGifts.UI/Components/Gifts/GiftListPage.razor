@@ -1,0 +1,191 @@
+@page "/gifts"
+@attribute [Authorize]
+@using EasyGifts.Shared.DTOs.Gift
+@using EasyGifts.UI.Services
+@using Microsoft.AspNetCore.Authorization
+
+<div class="gifts-page">
+    <div class="page-header">
+        <h1>Mes cadeaux</h1>
+        <button class="btn btn-primary" @onclick="ShowAddModal">+ Ajouter un cadeau</button>
+    </div>
+
+    @if (_isLoading)
+    {
+        <div class="loading">Chargement...</div>
+    }
+    else if (_gifts.Count == 0)
+    {
+        <div class="empty-state">
+            <p>Vous n'avez pas encore ajouté de cadeaux.</p>
+            <button class="btn btn-primary" @onclick="ShowAddModal">Ajouter votre premier cadeau</button>
+        </div>
+    }
+    else
+    {
+        <div class="gifts-grid">
+            @foreach (var gift in _gifts)
+            {
+                <div class="gift-card @(gift.IsPurchased ? "purchased" : "")">
+                    @if (!string.IsNullOrEmpty(gift.ImageUrl))
+                    {
+                        <img src="@gift.ImageUrl" alt="@gift.Name" class="gift-image" />
+                    }
+                    <div class="gift-content">
+                        <h3>@gift.Name</h3>
+                        @if (!string.IsNullOrEmpty(gift.Description))
+                        {
+                            <p class="gift-description">@gift.Description</p>
+                        }
+                        @if (gift.Price.HasValue)
+                        {
+                            <p class="gift-price">@gift.Price.Value.ToString("C")</p>
+                        }
+                        @if (!string.IsNullOrEmpty(gift.Url))
+                        {
+                            <a href="@gift.Url" target="_blank" class="gift-link">Voir le produit</a>
+                        }
+                    </div>
+                    <div class="gift-actions">
+                        <button class="btn btn-sm" @onclick="() => EditGift(gift)">Modifier</button>
+                        <button class="btn btn-sm btn-danger" @onclick="() => DeleteGift(gift.Id)">Supprimer</button>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@if (_showModal)
+{
+    <div class="modal-backdrop" @onclick="CloseModal">
+        <div class="modal" @onclick:stopPropagation="true">
+            <h2>@(_editingGift == null ? "Ajouter un cadeau" : "Modifier le cadeau")</h2>
+
+            <EditForm Model="_giftForm" OnValidSubmit="SaveGift">
+                <div class="form-group">
+                    <label>Nom</label>
+                    <InputText @bind-Value="_giftForm.Name" class="form-control" />
+                </div>
+
+                <div class="form-group">
+                    <label>Description</label>
+                    <InputTextArea @bind-Value="_giftForm.Description" class="form-control" />
+                </div>
+
+                <div class="form-group">
+                    <label>Prix</label>
+                    <InputNumber @bind-Value="_giftForm.Price" class="form-control" />
+                </div>
+
+                <div class="form-group">
+                    <label>URL du produit</label>
+                    <InputText @bind-Value="_giftForm.Url" class="form-control" />
+                </div>
+
+                <div class="form-group">
+                    <label>URL de l'image</label>
+                    <InputText @bind-Value="_giftForm.ImageUrl" class="form-control" />
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" class="btn" @onclick="CloseModal">Annuler</button>
+                    <button type="submit" class="btn btn-primary">Enregistrer</button>
+                </div>
+            </EditForm>
+        </div>
+    </div>
+}
+
+@code {
+    [Inject] private IGiftService GiftService { get; set; } = default!;
+
+    private List<GiftDto> _gifts = [];
+    private bool _isLoading = true;
+    private bool _showModal;
+    private GiftDto? _editingGift;
+    private GiftFormModel _giftForm = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadGifts();
+    }
+
+    private async Task LoadGifts()
+    {
+        _isLoading = true;
+        _gifts = await GiftService.GetMyGiftsAsync();
+        _isLoading = false;
+    }
+
+    private void ShowAddModal()
+    {
+        _editingGift = null;
+        _giftForm = new();
+        _showModal = true;
+    }
+
+    private void EditGift(GiftDto gift)
+    {
+        _editingGift = gift;
+        _giftForm = new GiftFormModel
+        {
+            Name = gift.Name,
+            Description = gift.Description,
+            Price = gift.Price,
+            Url = gift.Url,
+            ImageUrl = gift.ImageUrl
+        };
+        _showModal = true;
+    }
+
+    private void CloseModal()
+    {
+        _showModal = false;
+        _editingGift = null;
+        _giftForm = new();
+    }
+
+    private async Task SaveGift()
+    {
+        if (_editingGift != null)
+        {
+            _editingGift.Name = _giftForm.Name;
+            _editingGift.Description = _giftForm.Description;
+            _editingGift.Price = _giftForm.Price;
+            _editingGift.Url = _giftForm.Url;
+            _editingGift.ImageUrl = _giftForm.ImageUrl;
+            await GiftService.UpdateGiftAsync(_editingGift);
+        }
+        else
+        {
+            var newGift = new GiftCreateDto
+            {
+                Name = _giftForm.Name,
+                Description = _giftForm.Description,
+                Price = _giftForm.Price,
+                Url = _giftForm.Url,
+                ImageUrl = _giftForm.ImageUrl
+            };
+            await GiftService.CreateGiftAsync(newGift);
+        }
+
+        CloseModal();
+        await LoadGifts();
+    }
+
+    private async Task DeleteGift(Guid giftId)
+    {
+        await GiftService.DeleteGiftAsync(giftId);
+        await LoadGifts();
+    }
+
+    private class GiftFormModel
+    {
+        public string Name { get; set; } = "";
+        public string? Description { get; set; }
+        public decimal? Price { get; set; }
+        public string? Url { get; set; }
+        public string? ImageUrl { get; set; }
+    }
+}

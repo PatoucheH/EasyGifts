@@ -1,0 +1,39 @@
+@inherits LayoutComponentBase
+
+<div class="app-container">
+    <header class="app-header">
+        <nav class="navbar">
+            <a href="/" class="brand">EasyGifts</a>
+            <AuthorizeView>
+                <Authorized>
+                    <a href="/gifts">Mes cadeaux</a>
+                    <a href="/group">Mon groupe</a>
+                    <button @onclick="Logout" class="btn-logout">Déconnexion</button>
+                </Authorized>
+                <NotAuthorized>
+                    <a href="/login">Connexion</a>
+                    <a href="/register">Inscription</a>
+                </NotAuthorized>
+            </AuthorizeView>
+        </nav>
+    </header>
+
+    <main class="app-main">
+        @Body
+    </main>
+
+    <footer class="app-footer">
+        <p>&copy; @DateTime.Now.Year EasyGifts</p>
+    </footer>
+</div>
+
+@code {
+    [Inject] private IAuthService AuthService { get; set; } = default!;
+    [Inject] private NavigationManager Navigation { get; set; } = default!;
+
+    private async Task Logout()
+    {
+        await AuthService.LogoutAsync();
+        Navigation.NavigateTo("/login", forceLoad: true);
+    }
+}

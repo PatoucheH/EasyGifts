@@ -13,6 +13,24 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddHttpContextAccessor();
 
+// CORS configuration for Blazor clients
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("BlazorPolicy", policy =>
+    {
+        policy.WithOrigins(
+                "https://localhost:7000",
+                "https://localhost:7001",
+                "http://localhost:5000",
+                "http://localhost:5173",
+                "http://localhost:8080"
+            )
+            .AllowAnyHeader()
+            .AllowAnyMethod()
+            .AllowCredentials();
+    });
+});
+
 builder.Services.AddScoped<IEmailService, SmtpEmailService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IGiftsService, GiftsService>();
@@ -74,6 +92,7 @@ builder.Services.AddAuthorization();
 var app = builder.Build();
 
 app.UseHttpsRedirection();
+app.UseCors("BlazorPolicy");
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
@@ -81,12 +100,17 @@ app.MapControllers();
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
+    var dbContext = services.GetRequiredService<AppDbContext>();
+
+    // Apply pending migrations automatically
+    await dbContext.Database.MigrateAsync();
+
     await IdentitySeed.SeedRolesAsync(
         services.GetRequiredService<RoleManager<IdentityRole>>());
     await AdminSeed.SeedAdminAsync(
         services.GetRequiredService<UserManager<IdentityUser>>(),
         services.GetRequiredService<RoleManager<IdentityRole>>(),
-        services.GetRequiredService<AppDbContext>());
+        dbContext);
 }
 
 app.Run();

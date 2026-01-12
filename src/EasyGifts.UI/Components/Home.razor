@@ -1,0 +1,38 @@
+@page "/"
+
+<div class="home-page">
+    <div class="hero">
+        <h1>Bienvenue sur EasyGifts</h1>
+        <p>Créez et partagez vos listes de cadeaux avec vos proches</p>
+
+        <AuthorizeView>
+            <Authorized>
+                <div class="hero-actions">
+                    <a href="/gifts" class="btn btn-primary">Voir mes cadeaux</a>
+                    <a href="/group" class="btn btn-secondary">Mon groupe</a>
+                </div>
+            </Authorized>
+            <NotAuthorized>
+                <div class="hero-actions">
+                    <a href="/register" class="btn btn-primary">Commencer</a>
+                    <a href="/login" class="btn btn-secondary">Se connecter</a>
+                </div>
+            </NotAuthorized>
+        </AuthorizeView>
+    </div>
+
+    <div class="features">
+        <div class="feature">
+            <h3>Créez vos listes</h3>
+            <p>Ajoutez tous les cadeaux que vous souhaitez recevoir avec descriptions, prix et liens.</p>
+        </div>
+        <div class="feature">
+            <h3>Partagez en groupe</h3>
+            <p>Invitez votre famille ou vos amis à rejoindre votre groupe.</p>
+        </div>
+        <div class="feature">
+            <h3>Évitez les doublons</h3>
+            <p>Chacun peut voir ce qui a déjà été acheté pour éviter les mauvaises surprises.</p>
+        </div>
+    </div>
+</div>

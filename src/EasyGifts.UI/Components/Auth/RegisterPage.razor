@@ -1,0 +1,109 @@
+@page "/register"
+@using EasyGifts.Shared.DTOs.Auth
+@using EasyGifts.UI.Services
+
+<div class="auth-container">
+    <div class="auth-card">
+        <h1>Inscription</h1>
+
+        @if (!string.IsNullOrEmpty(_errorMessage))
+        {
+            <div class="alert alert-error">@_errorMessage</div>
+        }
+
+        @if (_success)
+        {
+            <div class="alert alert-success">
+                Inscription réussie ! <a href="/login">Se connecter</a>
+            </div>
+        }
+        else
+        {
+            <EditForm Model="_registerDto" OnValidSubmit="HandleRegister">
+                <DataAnnotationsValidator />
+
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <InputText id="email" @bind-Value="_registerDto.Email" class="form-control" />
+                    <ValidationMessage For="() => _registerDto.Email" />
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Mot de passe</label>
+                    <InputText id="password" type="password" @bind-Value="_registerDto.Password" class="form-control" />
+                    <ValidationMessage For="() => _registerDto.Password" />
+                </div>
+
+                @if (!string.IsNullOrEmpty(InvitationToken))
+                {
+                    <div class="alert alert-info">
+                        Vous avez été invité à rejoindre un groupe.
+                    </div>
+                }
+
+                <button type="submit" class="btn btn-primary" disabled="@_isLoading">
+                    @if (_isLoading)
+                    {
+                        <span>Inscription...</span>
+                    }
+                    else
+                    {
+                        <span>S'inscrire</span>
+                    }
+                </button>
+            </EditForm>
+
+            <p class="auth-link">
+                Déjà un compte ? <a href="/login">Se connecter</a>
+            </p>
+        }
+    </div>
+</div>
+
+@code {
+    [Inject] private IAuthService AuthService { get; set; } = default!;
+    [Inject] private NavigationManager Navigation { get; set; } = default!;
+
+    [SupplyParameterFromQuery]
+    public string? InvitationToken { get; set; }
+
+    private RegisterDto _registerDto = new() { Email = "", Password = "" };
+    private string? _errorMessage;
+    private bool _isLoading;
+    private bool _success;
+
+    protected override void OnInitialized()
+    {
+        if (!string.IsNullOrEmpty(InvitationToken))
+        {
+            _registerDto.InvitationToken = InvitationToken;
+        }
+    }
+
+    private async Task HandleRegister()
+    {
+        _isLoading = true;
+        _errorMessage = null;
+
+        try
+        {
+            var success = await AuthService.RegisterAsync(_registerDto);
+            if (success)
+            {
+                _success = true;
+            }
+            else
+            {
+                _errorMessage = "Erreur lors de l'inscription";
+            }
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = $"Erreur: {ex.Message}";
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+}
