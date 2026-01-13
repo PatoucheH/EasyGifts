@@ -91,6 +91,7 @@ namespace EasyGiftsBackend.Infrastructure.Services
 
             return new GroupDto
             {
+                Id = group.Id,
                 Name = group.Name,
                 Admin = ToUserDto(user),
             };
@@ -216,26 +217,49 @@ namespace EasyGiftsBackend.Infrastructure.Services
                 ?? throw new Exception("Group not found");
             return new GroupDto
             {
+                Id = group.Id,
                 Name = group.Name,
                 Admin = ToUserDto(group.Admin)
             };
         }
 
-        public async Task<GroupDto> GetGroupCurrentUser()
+        public async Task<GroupDto?> GetGroupCurrentUser()
         {
             var currentUserId = GetCurrentUserId();
 
             var groupUser = await _context.GroupUsers
                 .Include(gu => gu.Group)
                     .ThenInclude(g => g.Admin)
-                .FirstOrDefaultAsync(gu => gu.UserId == currentUserId)
-                ?? throw new Exception("User is not in any group");
+                .FirstOrDefaultAsync(gu => gu.UserId == currentUserId);
+
+            if (groupUser == null)
+                return null;
 
             return new GroupDto
             {
+                Id = groupUser.Group.Id,
                 Name = groupUser.Group.Name,
                 Admin = ToUserDto(groupUser.Group.Admin)
             };
+        }
+
+        public async Task<List<GroupDto>> GetGroupsCurrentUser()
+        {
+            var currentUserId = GetCurrentUserId();
+
+            var groups = await _context.GroupUsers
+                .Where(gu => gu.UserId == currentUserId)
+                .Include(gu => gu.Group)
+                    .ThenInclude(g => g.Admin)
+                .Select(gu => new GroupDto
+                {
+                    Id = gu.Group.Id,
+                    Name = gu.Group.Name,
+                    Admin = ToUserDto(gu.Group.Admin)
+                })
+                .ToListAsync();
+
+            return groups;
         }
 
 

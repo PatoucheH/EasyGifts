@@ -141,12 +141,12 @@ public class ApiClient : IAuthService, IGiftService, IGroupService
 
     #region Groups
 
-    public async Task<GroupDto?> GetMyGroupAsync()
+    public async Task<List<GroupDto>> GetMyGroupsAsync()
     {
         await SetAuthHeaderAsync();
         var response = await _httpClient.GetAsync("api/groups/me");
-        if (!response.IsSuccessStatusCode) return null;
-        return await response.Content.ReadFromJsonAsync<GroupDto>(JsonOptions);
+        if (!response.IsSuccessStatusCode) return [];
+        return await response.Content.ReadFromJsonAsync<List<GroupDto>>(JsonOptions) ?? [];
     }
 
     public async Task<GroupDto?> GetGroupByIdAsync(Guid groupId)

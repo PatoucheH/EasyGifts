@@ -7,6 +7,7 @@ namespace EasyGiftsBackend.Domain.DTOs.GroupDTOs
 {
     public class GroupDto
     {
+        public Guid Id { get; set; }
         public required string Name { get; set; }
         public required UserDto Admin { get; set; }
     }

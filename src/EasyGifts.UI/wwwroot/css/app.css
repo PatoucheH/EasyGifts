@@ -255,6 +255,16 @@ html, body {
     font-size: 0.875rem;
 }
 
+.gift-purchased-tag {
+    display: inline-block;
+    background: #28a745;
+    color: white;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+    font-size: 0.75rem;
+    margin-top: 0.5rem;
+}
+
 .gift-actions {
     padding: 1rem;
     border-top: 1px solid #eee;
@@ -307,4 +317,231 @@ html, body {
     gap: 1rem;
     justify-content: flex-end;
     margin-top: 1.5rem;
+}
+
+/* Group page */
+.group-page .group-header {
+    margin-bottom: 2rem;
+}
+
+.group-page .group-header h1 {
+    margin: 0 0 0.5rem;
+}
+
+.group-admin {
+    color: #666;
+}
+
+.no-group {
+    text-align: center;
+    padding: 4rem 2rem;
+    background: white;
+    border-radius: 0.5rem;
+}
+
+.create-group-form {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    margin-top: 2rem;
+    max-width: 400px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.create-group-form .form-control {
+    flex: 1;
+}
+
+.group-sections {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+.members-section,
+.invite-section,
+.danger-zone {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 0.5rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.members-section h2,
+.invite-section h2,
+.danger-zone h2 {
+    margin-top: 0;
+    margin-bottom: 1rem;
+}
+
+.members-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.member-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    background: #f8f9fa;
+    border-radius: 0.25rem;
+}
+
+.member-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.member-name {
+    font-weight: 500;
+}
+
+.member-email {
+    font-size: 0.875rem;
+    color: #666;
+}
+
+.member-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.invite-form {
+    display: flex;
+    gap: 1rem;
+}
+
+.invite-form .form-control {
+    flex: 1;
+}
+
+.danger-zone {
+    border: 1px solid #dc3545;
+}
+
+.danger-zone h2 {
+    color: #dc3545;
+}
+
+/* Blazor error UI - hidden by default */
+#blazor-error-ui {
+    display: none;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 1rem;
+    background: #ffebee;
+    color: #b71c1c;
+    text-align: center;
+    z-index: 9999;
+}
+
+#blazor-error-ui .reload {
+    margin-left: 1rem;
+    color: #1976d2;
+}
+
+#blazor-error-ui .dismiss {
+    cursor: pointer;
+    margin-left: 1rem;
+}
+
+/* Group page with sidebar */
+.group-page {
+    display: flex;
+    gap: 2rem;
+    min-height: calc(100vh - 200px);
+}
+
+.groups-sidebar {
+    width: 280px;
+    flex-shrink: 0;
+    background: white;
+    padding: 1.5rem;
+    border-radius: 0.5rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    display: flex;
+    flex-direction: column;
+}
+
+.groups-sidebar h2 {
+    margin: 0 0 1rem;
+    font-size: 1.1rem;
+    color: #666;
+}
+
+.groups-list {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.group-item {
+    padding: 0.75rem 1rem;
+    border-radius: 0.25rem;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: background 0.2s;
+}
+
+.group-item:hover {
+    background: #f0f0f0;
+}
+
+.group-item.active {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.group-item .group-name {
+    font-weight: 500;
+}
+
+.admin-badge {
+    font-size: 0.7rem;
+    background: rgba(255, 255, 255, 0.3);
+    padding: 0.2rem 0.5rem;
+    border-radius: 0.25rem;
+}
+
+.group-item:not(.active) .admin-badge {
+    background: #667eea;
+    color: white;
+}
+
+.btn-block {
+    width: 100%;
+}
+
+.group-content {
+    flex: 1;
+}
+
+.no-group-selected {
+    background: white;
+    padding: 3rem;
+    border-radius: 0.5rem;
+    text-align: center;
+}
+
+.no-group-selected h2 {
+    margin-top: 0;
+}
+
+@media (max-width: 768px) {
+    .group-page {
+        flex-direction: column;
+    }
+
+    .groups-sidebar {
+        width: 100%;
+    }
 }

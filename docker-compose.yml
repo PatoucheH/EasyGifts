@@ -22,6 +22,11 @@ services:
     environment:
       ConnectionStrings__MyPostgreDB: "Host=postgres;Port=5432;Database=EasyGiftsDb;Username=postgres;Password=postgres"
       ASPNETCORE_URLS: "http://+:5000"
+      Smtp__Host: "sandbox.smtp.mailtrap.io"
+      Smtp__Port: "587"
+      Smtp__Username: "5bcb9d4735db38"
+      Smtp__Password: "606c94d8d3d408"
+      Smtp__From: "EasyGifts <dev@easygifts.local>"
     ports:
       - "5000:5000"
 

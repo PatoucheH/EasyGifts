@@ -88,16 +88,16 @@ namespace EasyGiftsBackend.Api.Controllers
         }
 
         [HttpGet("me")]
-        public async Task<IActionResult> GetMyGroup()
+        public async Task<IActionResult> GetMyGroups()
         {
             try
             {
-                var group = await _groupService.GetGroupCurrentUser();
-                return Ok(group);
+                var groups = await _groupService.GetGroupsCurrentUser();
+                return Ok(groups);
             }
             catch (Exception ex)
             {
-                return NotFound(ex.Message);
+                return BadRequest(ex.Message);
             }
         }
 

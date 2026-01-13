@@ -1,0 +1,352 @@
+@page "/group"
+@page "/group/{GroupId:guid}"
+@attribute [Authorize]
+@using EasyGifts.Shared.DTOs.Group
+@using EasyGifts.Shared.DTOs.User
+@using EasyGifts.UI.Services
+@using Microsoft.AspNetCore.Authorization
+
+<div class="group-page">
+    @if (_isLoading)
+    {
+        <div class="loading">Chargement...</div>
+    }
+    else
+    {
+        <div class="groups-sidebar">
+            <h2>Mes groupes</h2>
+            <div class="groups-list">
+                @foreach (var group in _groups)
+                {
+                    <div class="group-item @(group.Id == _selectedGroup?.Id ? "active" : "")"
+                         @onclick="() => SelectGroup(group)">
+                        <span class="group-name">@group.Name</span>
+                        @if (group.Admin.Id == _currentUserId)
+                        {
+                            <span class="admin-badge">Admin</span>
+                        }
+                    </div>
+                }
+            </div>
+            <button class="btn btn-primary btn-block" @onclick="ShowCreateModal">
+                + Créer un groupe
+            </button>
+        </div>
+
+        <div class="group-content">
+            @if (_selectedGroup == null)
+            {
+                <div class="no-group-selected">
+                    <h2>Bienvenue dans vos groupes</h2>
+                    @if (_groups.Count == 0)
+                    {
+                        <p>Vous n'appartenez à aucun groupe.</p>
+                        <p>Créez un groupe pour partager vos listes de cadeaux avec vos proches.</p>
+                    }
+                    else
+                    {
+                        <p>Sélectionnez un groupe dans la liste pour voir ses membres.</p>
+                    }
+                </div>
+            }
+            else
+            {
+                <div class="group-header">
+                    <h1>@_selectedGroup.Name</h1>
+                    <p class="group-admin">Administrateur : @_selectedGroup.Admin.Username (@_selectedGroup.Admin.Email)</p>
+                </div>
+
+                @if (!string.IsNullOrEmpty(_errorMessage))
+                {
+                    <div class="alert alert-error">@_errorMessage</div>
+                }
+
+                @if (!string.IsNullOrEmpty(_successMessage))
+                {
+                    <div class="alert alert-success">@_successMessage</div>
+                }
+
+                <div class="group-sections">
+                    <section class="members-section">
+                        <h2>Membres du groupe (@_members.Count)</h2>
+
+                        <div class="members-list">
+                            @foreach (var member in _members)
+                            {
+                                <div class="member-card">
+                                    <div class="member-info">
+                                        <span class="member-name">@member.Username</span>
+                                        <span class="member-email">@member.Email</span>
+                                    </div>
+                                    <div class="member-actions">
+                                        <a href="/gifts/@member.Id" class="btn btn-sm">Voir les cadeaux</a>
+                                        @if (_isAdmin && member.Id != _selectedGroup.Admin.Id)
+                                        {
+                                            <button class="btn btn-sm btn-danger" @onclick="() => RemoveMember(member.Id)">
+                                                Retirer
+                                            </button>
+                                        }
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </section>
+
+                    @if (_isAdmin)
+                    {
+                        <section class="invite-section">
+                            <h2>Inviter un membre</h2>
+                            <div class="invite-form">
+                                <input type="email" @bind="_inviteEmail" placeholder="Email de la personne à inviter" class="form-control" />
+                                <button class="btn btn-primary" @onclick="InviteMember" disabled="@string.IsNullOrWhiteSpace(_inviteEmail)">
+                                    Envoyer l'invitation
+                                </button>
+                            </div>
+                        </section>
+
+                        <section class="danger-zone">
+                            <h2>Zone de danger</h2>
+                            <p>La suppression du groupe est irréversible.</p>
+                            <button class="btn btn-danger" @onclick="ShowDeleteConfirm">
+                                Supprimer le groupe
+                            </button>
+                        </section>
+                    }
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@if (_showCreateModal)
+{
+    <div class="modal-backdrop" @onclick="HideCreateModal">
+        <div class="modal" @onclick:stopPropagation="true">
+            <h2>Créer un nouveau groupe</h2>
+            <div class="form-group">
+                <label>Nom du groupe</label>
+                <input type="text" @bind="_newGroupName" class="form-control" placeholder="Ex: Famille Dupont" />
+            </div>
+            <div class="modal-actions">
+                <button class="btn" @onclick="HideCreateModal">Annuler</button>
+                <button class="btn btn-primary" @onclick="CreateGroup" disabled="@string.IsNullOrWhiteSpace(_newGroupName)">
+                    Créer
+                </button>
+            </div>
+        </div>
+    </div>
+}
+
+@if (_showDeleteConfirm)
+{
+    <div class="modal-backdrop" @onclick="HideDeleteConfirm">
+        <div class="modal" @onclick:stopPropagation="true">
+            <h2>Supprimer le groupe ?</h2>
+            <p>Cette action est irréversible. Tous les membres perdront l'accès au groupe.</p>
+            <div class="modal-actions">
+                <button class="btn" @onclick="HideDeleteConfirm">Annuler</button>
+                <button class="btn btn-danger" @onclick="DeleteGroup">Confirmer la suppression</button>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public Guid? GroupId { get; set; }
+
+    [Inject] private IGroupService GroupService { get; set; } = default!;
+    [Inject] private IAuthService AuthService { get; set; } = default!;
+    [Inject] private NavigationManager Navigation { get; set; } = default!;
+
+    private List<GroupDto> _groups = [];
+    private GroupDto? _selectedGroup;
+    private List<UserDto> _members = [];
+    private bool _isLoading = true;
+    private bool _isAdmin;
+    private string _newGroupName = "";
+    private string _inviteEmail = "";
+    private string? _errorMessage;
+    private string? _successMessage;
+    private bool _showCreateModal;
+    private bool _showDeleteConfirm;
+    private Guid _currentUserId;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadCurrentUser();
+        await LoadGroups();
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (GroupId.HasValue && _groups.Any())
+        {
+            var group = _groups.FirstOrDefault(g => g.Id == GroupId.Value);
+            if (group != null)
+            {
+                await SelectGroup(group);
+            }
+        }
+    }
+
+    private async Task LoadCurrentUser()
+    {
+        var user = await AuthService.GetCurrentUserAsync();
+        if (user != null && Guid.TryParse(user.Id, out var userId))
+        {
+            _currentUserId = userId;
+        }
+    }
+
+    private async Task LoadGroups()
+    {
+        _isLoading = true;
+        _errorMessage = null;
+
+        try
+        {
+            _groups = await GroupService.GetMyGroupsAsync();
+
+            if (GroupId.HasValue)
+            {
+                var group = _groups.FirstOrDefault(g => g.Id == GroupId.Value);
+                if (group != null)
+                {
+                    await SelectGroup(group);
+                }
+            }
+            else if (_groups.Count == 1)
+            {
+                await SelectGroup(_groups[0]);
+            }
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = $"Erreur lors du chargement : {ex.Message}";
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private async Task SelectGroup(GroupDto group)
+    {
+        _selectedGroup = group;
+        _isAdmin = group.Admin.Id == _currentUserId;
+        _members = await GroupService.GetGroupMembersAsync(group.Id);
+        _errorMessage = null;
+        _successMessage = null;
+    }
+
+    private void ShowCreateModal() => _showCreateModal = true;
+    private void HideCreateModal()
+    {
+        _showCreateModal = false;
+        _newGroupName = "";
+    }
+
+    private async Task CreateGroup()
+    {
+        _errorMessage = null;
+
+        try
+        {
+            var group = await GroupService.CreateGroupAsync(_newGroupName);
+            if (group != null)
+            {
+                _groups.Add(group);
+                await SelectGroup(group);
+                HideCreateModal();
+            }
+            else
+            {
+                _errorMessage = "Erreur lors de la création du groupe";
+            }
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = $"Erreur : {ex.Message}";
+        }
+    }
+
+    private async Task InviteMember()
+    {
+        _errorMessage = null;
+        _successMessage = null;
+
+        if (_selectedGroup == null) return;
+
+        try
+        {
+            var success = await GroupService.InviteUserAsync(_selectedGroup.Id, _inviteEmail);
+            if (success)
+            {
+                _successMessage = $"Invitation envoyée à {_inviteEmail}";
+                _inviteEmail = "";
+                _members = await GroupService.GetGroupMembersAsync(_selectedGroup.Id);
+            }
+            else
+            {
+                _errorMessage = "Erreur lors de l'envoi de l'invitation";
+            }
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = $"Erreur : {ex.Message}";
+        }
+    }
+
+    private async Task RemoveMember(Guid userId)
+    {
+        if (_selectedGroup == null) return;
+
+        _errorMessage = null;
+
+        try
+        {
+            var success = await GroupService.RemoveUserAsync(_selectedGroup.Id, userId);
+            if (success)
+            {
+                _members = await GroupService.GetGroupMembersAsync(_selectedGroup.Id);
+            }
+            else
+            {
+                _errorMessage = "Erreur lors de la suppression du membre";
+            }
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = $"Erreur : {ex.Message}";
+        }
+    }
+
+    private void ShowDeleteConfirm() => _showDeleteConfirm = true;
+    private void HideDeleteConfirm() => _showDeleteConfirm = false;
+
+    private async Task DeleteGroup()
+    {
+        if (_selectedGroup == null) return;
+
+        try
+        {
+            var success = await GroupService.DeleteGroupAsync(_selectedGroup.Id);
+            if (success)
+            {
+                _groups.Remove(_selectedGroup);
+                _selectedGroup = null;
+                _members = [];
+            }
+            else
+            {
+                _errorMessage = "Erreur lors de la suppression du groupe";
+            }
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = $"Erreur : {ex.Message}";
+        }
+
+        HideDeleteConfirm();
+    }
+}

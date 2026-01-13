@@ -13,7 +13,8 @@ namespace EasyGiftsBackend.Application.Interfaces
         public Task<string> AddUserToGroup(Guid groupId, string email);
         public Task<string> RemoveUserFromGroup(Guid groupId, Guid userId);
         public Task<GroupDto> GetGroupById(Guid groupId);
-        public Task<GroupDto> GetGroupCurrentUser();
+        public Task<GroupDto?> GetGroupCurrentUser();
+        public Task<List<GroupDto>> GetGroupsCurrentUser();
         public Task<List<UserDto>> GetMembersOfGroup(Guid groupId);
     }
 }

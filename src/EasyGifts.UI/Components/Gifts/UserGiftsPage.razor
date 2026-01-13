@@ -1,0 +1,78 @@
+@page "/gifts/{UserId:guid}"
+@attribute [Authorize]
+@using EasyGifts.Shared.DTOs.Gift
+@using EasyGifts.UI.Services
+@using Microsoft.AspNetCore.Authorization
+
+<div class="gifts-page">
+    <div class="page-header">
+        <h1>Cadeaux de @_userName</h1>
+        <a href="/group" class="btn btn-secondary">Retour au groupe</a>
+    </div>
+
+    @if (_isLoading)
+    {
+        <div class="loading">Chargement...</div>
+    }
+    else if (_gifts.Count == 0)
+    {
+        <div class="empty-state">
+            <p>Cet utilisateur n'a pas encore ajouté de cadeaux.</p>
+        </div>
+    }
+    else
+    {
+        <div class="gifts-grid">
+            @foreach (var gift in _gifts)
+            {
+                <div class="gift-card @(gift.IsPurchased ? "purchased" : "")">
+                    @if (!string.IsNullOrEmpty(gift.ImageUrl))
+                    {
+                        <img src="@gift.ImageUrl" alt="@gift.Name" class="gift-image" />
+                    }
+                    <div class="gift-content">
+                        <h3>@gift.Name</h3>
+                        @if (!string.IsNullOrEmpty(gift.Description))
+                        {
+                            <p class="gift-description">@gift.Description</p>
+                        }
+                        @if (gift.Price.HasValue)
+                        {
+                            <p class="gift-price">@gift.Price.Value.ToString("C")</p>
+                        }
+                        @if (!string.IsNullOrEmpty(gift.Url))
+                        {
+                            <a href="@gift.Url" target="_blank" class="gift-link">Voir le produit</a>
+                        }
+                        @if (gift.IsPurchased)
+                        {
+                            <p class="gift-purchased-tag">Acheté</p>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public Guid UserId { get; set; }
+    [Inject] private IGiftService GiftService { get; set; } = default!;
+
+    private List<GiftDto> _gifts = [];
+    private bool _isLoading = true;
+    private string _userName = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadGifts();
+    }
+
+    private async Task LoadGifts()
+    {
+        _isLoading = true;
+        _gifts = await GiftService.GetGiftsByUserIdAsync(UserId);
+        _userName = _gifts.FirstOrDefault()?.Name ?? "l'utilisateur";
+        _isLoading = false;
+    }
+}

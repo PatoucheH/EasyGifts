@@ -5,7 +5,7 @@ namespace EasyGifts.UI.Services;
 
 public interface IGroupService
 {
-    Task<GroupDto?> GetMyGroupAsync();
+    Task<List<GroupDto>> GetMyGroupsAsync();
     Task<GroupDto?> GetGroupByIdAsync(Guid groupId);
     Task<List<UserDto>> GetGroupMembersAsync(Guid groupId);
     Task<GroupDto?> CreateGroupAsync(string groupName);
